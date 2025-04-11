@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chess</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body style="background-color: black;">
+
+    <div class="chessboard" id="chessBoard">
+      <!-- Black Pieces -->
+      <div class="piece br" id="br1" data-x="0" data-y="0"></div>
+      <div class="piece bn" id="bn1" data-x="1" data-y="0"></div>
+      <div class="piece bb" id="bb1" data-x="2" data-y="0"></div>
+      <div class="piece bq" id="bq" data-x="3" data-y="0"></div>
+      <div class="piece bk" id="bk" data-x="4" data-y="0"></div>
+      <div class="piece bb" id="bb2" data-x="5" data-y="0"></div>
+      <div class="piece bn" id="bn2" data-x="6" data-y="0"></div>
+      <div class="piece br" id="br2" data-x="7" data-y="0"></div>
+
+      <div class="piece bp" id="bp1" data-x="0" data-y="1"></div>
+      <div class="piece bp" id="bp2" data-x="1" data-y="1"></div>
+      <div class="piece bp" id="bp3" data-x="2" data-y="1"></div>
+      <div class="piece bp" id="bp4" data-x="3" data-y="1"></div>
+      <div class="piece bp" id="bp5" data-x="4" data-y="1"></div>
+      <div class="piece bp" id="bp6" data-x="5" data-y="1"></div>
+      <div class="piece bp" id="bp7" data-x="6" data-y="1"></div>
+      <div class="piece bp" id="bp8" data-x="7" data-y="1"></div>
+
+      <!-- White Pieces -->
+      <div class="piece wp" id="wp1" data-x="0" data-y="6"></div>
+      <div class="piece wp" id="wp2" data-x="1" data-y="6"></div>
+      <div class="piece wp" id="wp3" data-x="2" data-y="6"></div>
+      <!-- <div class="piece wp" id="wp4" data-x="3" data-y="6"></div>
+      <div class="piece wp" id="wp5" data-x="4" data-y="6"></div> -->
+      <div class="piece wp" id="wp6" data-x="5" data-y="6"></div>
+      <div class="piece wp" id="wp7" data-x="6" data-y="6"></div>
+      <div class="piece wp" id="wp8" data-x="7" data-y="6"></div>
+
+      <div class="piece wr" id="wr1" data-x="0" data-y="7"></div>
+      <div class="piece wn" id="wn1" data-x="1" data-y="7"></div>
+      <div class="piece wb" id="wb1" data-x="2" data-y="7"></div>
+      <div class="piece wq" id="wq" data-x="3" data-y="7"></div>
+      <div class="piece wk" id="wk" data-x="4" data-y="7"></div>
+      <div class="piece wb" id="wb2" data-x="5" data-y="7"></div>
+      <div class="piece wn" id="wn2" data-x="6" data-y="7"></div>
+      <div class="piece wr" id="wr2" data-x="7" data-y="7"></div>
+    </div>
+
+    <div>
+      <button class="button large grey game-mode">
+        <img style="height: 2rem; aspect-ratio: 1/1; object-fit: cover;" src="images/icon/stopwatch.svg" alt="">
+        <p><span id="gameModeText">Game Mode</span></p>
+      </button>
+      <button class="button large green play">Play</button>
+    </div>
+
+    <script src="game.js"></script>
+  </body>
+</html>
