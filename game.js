@@ -3,7 +3,8 @@ let boardBound,
   activePiecePos,
   clickedSquare,
   boardStatus,
-  pieceObj;
+  pieceObj,
+  turnBlack = false;
 const chessBoard = document.getElementById("chessBoard");
 
 window.addEventListener("load", () => {
@@ -63,7 +64,7 @@ function calcMoves() {
 
     pieceObj.moves.forEach(([i, j]) => {
       if (name[1] == "p" && x == i) {
-      } //doing nothing for straight moves of pawn as they can not target straight
+      } 
       else {
         const currentTarget = boardStatus[i][j].targeted;
         if (typeof currentTarget === "undefined") {
@@ -284,7 +285,7 @@ class King extends Piece {
       if (i >= 0 && i < 8 && j >= 0 && j < 8) {
         if (
           (boardStatus[i][j].empty || boardStatus[i][j].color !== this.color) &&
-          boardStatus[i][j].targeted === this.color
+          (boardStatus[i][j].targeted === this.color || !(boardStatus[i][j].targeted))
         ) {
           this.moves.push([i, j]);
         }
@@ -323,6 +324,9 @@ function moveCheck() {
       activePiece.color
     );
     pieceObj = setPieceType(activePiece.name, pieceObj);
+    if(!boardStatus[clickedSquare.x][clickedSquare.y].empty){
+        document.getElementById(boardStatus[clickedSquare.x][clickedSquare.y].id).className = "captured";
+    }
     pieceObj.movePiece(activePiece.id);
   }else if(!(boardStatus[clickedSquare.x][clickedSquare.y].empty)){
     statusCheck();
@@ -334,6 +338,9 @@ function moveCheck() {
 chessBoard.addEventListener("click", (event) => {
   clickLocate(event);
   console.log(clickedSquare.x, clickedSquare.y);
+  if(boardStatus[clickedSquare.x][clickedSquare.y].targeted){
+    console.log(boardStatus[clickedSquare.x][clickedSquare.y].targeted);
+  }
   if (activePiece) {
     moveCheck();
   } else {

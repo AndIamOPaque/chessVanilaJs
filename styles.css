@@ -88,3 +88,7 @@ button {
   box-shadow: 0 clamp(0.1rem, 0.4rem, 0.8rem) 0 #5e8b4c,
               0 0 20px #aee277;
 }
+
+.captured{
+  visibility: hidden;
+}
