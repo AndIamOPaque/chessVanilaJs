@@ -44,7 +44,6 @@ function setBoardStat() {
     piece.style.gridColumnStart = x + 1;
     piece.style.gridRowStart = y + 1;
   });
-  // calcMoves();
 }
 
 function calcMoves() {
@@ -64,6 +63,7 @@ function calcMoves() {
 
     pieceObj.moves.forEach(([i, j]) => {
       if (name[1] == "p" && x == i) {
+        // add pawn diagnol targets, not added here
       } 
       else {
         const currentTarget = boardStatus[i][j].targeted;
@@ -125,6 +125,7 @@ class Piece {
     setBoardStat();
     calcMoves();
     activePiece = null;
+    turnBlack = !turnBlack;
   }
 }
 
@@ -324,10 +325,12 @@ function moveCheck() {
       activePiece.color
     );
     pieceObj = setPieceType(activePiece.name, pieceObj);
-    if(!boardStatus[clickedSquare.x][clickedSquare.y].empty){
-        document.getElementById(boardStatus[clickedSquare.x][clickedSquare.y].id).className = "captured";
+    if((turnBlack && pieceObj.color == "b")|| (!turnBlack && pieceObj.color == "w")){
+        if(!boardStatus[clickedSquare.x][clickedSquare.y].empty){
+            document.getElementById(boardStatus[clickedSquare.x][clickedSquare.y].id).className = "captured";
+        }
+        pieceObj.movePiece(activePiece.id);
     }
-    pieceObj.movePiece(activePiece.id);
   }else if(!(boardStatus[clickedSquare.x][clickedSquare.y].empty)){
     statusCheck();
   }else{
@@ -338,9 +341,6 @@ function moveCheck() {
 chessBoard.addEventListener("click", (event) => {
   clickLocate(event);
   console.log(clickedSquare.x, clickedSquare.y);
-  if(boardStatus[clickedSquare.x][clickedSquare.y].targeted){
-    console.log(boardStatus[clickedSquare.x][clickedSquare.y].targeted);
-  }
   if (activePiece) {
     moveCheck();
   } else {
