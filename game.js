@@ -1,3 +1,4 @@
+// declaration
 let boardBound,
   activePiece,
   activePiecePos,
@@ -8,12 +9,14 @@ let boardBound,
 const chessBoard = document.getElementById("chessBoard");
 
 window.addEventListener("load", () => {
-  setBoardStat();
   boardLocate();
+  setBoardStat();
+  calcAllMoves();
 });
 window.addEventListener("resize", () => {
-  setBoardStat();
   boardLocate();
+  setBoardStat();
+  calcAllMoves();
 });
 
 function setPieceType(name, obj) {
@@ -46,36 +49,42 @@ function setBoardStat() {
   });
 }
 
-function calcMoves() {
-  document.querySelectorAll(".piece").forEach((piece) => {
-    let x = parseInt(piece.dataset.x);
-    let y = parseInt(piece.dataset.y);
-    let name = [...piece.classList].find((cls) => /^(w|b)[kqrbnp]$/.test(cls));
-    // const id = piece.id;
-    let color = name[0];
-    // console.log(x, y, color);
-    pieceObj = new Piece(x, y, color);
-    // console.log(pieceObj)
-    pieceObj = setPieceType(name, pieceObj);
-    pieceObj.findMoves();
-    // console.log(pieceObj);
-    // to fix target
+function setTarget(i, j, col){
+  const currentTarget = boardStatus[i][j].targeted;
+  if (typeof currentTarget === "undefined") {
+    boardStatus[i][j].targeted = col;
+  } else if (currentTarget !== col && currentTarget !== "wb") {
+    boardStatus[i][j].targeted = "wb";
+  }
+}
 
-    pieceObj.moves.forEach(([i, j]) => {
-      if (name[1] == "p" && x == i) {
-        // add pawn diagnol targets, not added here
-      } 
-      else {
-        const currentTarget = boardStatus[i][j].targeted;
-        if (typeof currentTarget === "undefined") {
-          boardStatus[i][j].targeted = color;
-        } else if (currentTarget !== color && currentTarget !== "wb") {
-          boardStatus[i][j].targeted = "wb";
+function calcAllMoves() {
+
+  for(x=0;x<8;x++){
+    for(y=0;y<8;y++){
+      // delete boardStatus[x][y].targeted;
+      if(!boardStatus[x][y].empty){    
+        let name = boardStatus[x][y].name;
+        let color = name[0];
+        pieceObj = new Piece(x, y, color);
+        pieceObj = setPieceType(name, pieceObj);
+        pieceObj.findMoves();
+        // to fix target
+        if(name[1] == "p"){
+          let j = y + pieceObj.step; 
+          if(j< 8 && j >= 0){
+            if(x + 1 < 8){setTarget(x+1, j, color)}
+            if(x - 1 >= 0){setTarget(x-1, j, color)}
+          }
         }
+        else{
+        pieceObj.moves.forEach(([i, j]) => {
+            setTarget(i, j, color);
+        });}
+        boardStatus[x][y].moves = pieceObj.moves;
       }
-    });
-    boardStatus[x][y].moves = pieceObj.moves;
-  });
+    }
+  }
 }
 
 function boardLocate() {
@@ -123,58 +132,69 @@ class Piece {
     piece.dataset.x = clickedSquare.x;
     piece.dataset.y = clickedSquare.y;
     setBoardStat();
-    calcMoves();
+    calcAllMoves();
     activePiece = null;
     turnBlack = !turnBlack;
   }
 }
 
 class Pawn extends Piece {
+  step;
   constructor(pieceObj) {
     super(pieceObj.pos.x, pieceObj.pos.y, pieceObj.color);
-  }
-  findMoves() {
-    let step,
-      start = false;
-    if (this.color === "b") {
-      step = 1;
-      if (this.pos.y == 1) {
-        start = true;
-      }
-    } else {
-      if (this.pos.y == 6) {
-        start = true;
-      }
-      step = -1;
-    }
-    this.moves = [];
     
-    if (this.pos.y + step<8 && 
-        this.pos.y + step>= 0 && 
-        boardStatus[this.pos.x][this.pos.y + step].empty) {
-      this.moves.push([this.pos.x, this.pos.y + step]);
-      if (start && boardStatus[this.pos.x][this.pos.y + 2 * step].empty) {
-        this.moves.push([this.pos.x, this.pos.y + 2 * step]);
-      }
-    }
-    if (
-      this.pos.x + 1 < 8 &&
-      this.pos.y + step >= 0 &&
-      this.pos.y + step < 8 &&
-      !boardStatus[this.pos.x + 1][this.pos.y + step].empty &&
-      boardStatus[this.pos.x + 1][this.pos.y + step].color !== this.color
-    ) {
-      this.moves.push([this.pos.x + 1, this.pos.y + step]);
+    // Set step based on color
+    this.step = this.color === "b" ? 1 : -1;
+  }
+
+  findMoves() {
+    let start = false;
+
+    if (this.color === "b") {
+      if (this.pos.y === 1) start = true;
+    } else {
+      if (this.pos.y === 6) start = true;
     }
 
+    this.moves = [];
+
+    // Move forward one step
+    if (
+      this.pos.y + this.step < 8 &&
+      this.pos.y + this.step >= 0 &&
+      boardStatus[this.pos.x][this.pos.y + this.step].empty
+    ) {
+      this.moves.push([this.pos.x, this.pos.y + this.step]);
+
+      // Move forward two steps from start position
+      if (
+        start &&
+        boardStatus[this.pos.x][this.pos.y + 2 * this.step].empty
+      ) {
+        this.moves.push([this.pos.x, this.pos.y + 2 * this.step]);
+      }
+    }
+
+    // Capture diagonally to the right
+    if (
+      this.pos.x + 1 < 8 &&
+      this.pos.y + this.step >= 0 &&
+      this.pos.y + this.step < 8 &&
+      !boardStatus[this.pos.x + 1][this.pos.y + this.step].empty &&
+      boardStatus[this.pos.x + 1][this.pos.y + this.step].color !== this.color
+    ) {
+      this.moves.push([this.pos.x + 1, this.pos.y + this.step]);
+    }
+
+    // Capture diagonally to the left
     if (
       this.pos.x - 1 >= 0 &&
-      this.pos.y + step >= 0 &&
-      this.pos.y + step < 8 &&
-      !boardStatus[this.pos.x - 1][this.pos.y + step].empty &&
-      boardStatus[this.pos.x - 1][this.pos.y + step].color !== this.color
+      this.pos.y + this.step >= 0 &&
+      this.pos.y + this.step < 8 &&
+      !boardStatus[this.pos.x - 1][this.pos.y + this.step].empty &&
+      boardStatus[this.pos.x - 1][this.pos.y + this.step].color !== this.color
     ) {
-      this.moves.push([this.pos.x - 1, this.pos.y + step]);
+      this.moves.push([this.pos.x - 1, this.pos.y + this.step]);
     }
   }
 }
@@ -301,7 +321,7 @@ function statusCheck() {
   if (!boardStatus[clickedSquare.x][clickedSquare.y].empty) {
     activePiecePos = { x: clickedSquare.x, y: clickedSquare.y };
     activePiece = boardStatus[clickedSquare.x][clickedSquare.y];
-    calcMoves();
+    calcAllMoves();
     showMoves();
   } else {
     activePiece = null;
@@ -341,6 +361,7 @@ function moveCheck() {
 chessBoard.addEventListener("click", (event) => {
   clickLocate(event);
   console.log(clickedSquare.x, clickedSquare.y);
+  console.log("Targeted by :", boardStatus[clickedSquare.x][clickedSquare.y].targeted);
   if (activePiece) {
     moveCheck();
   } else {
