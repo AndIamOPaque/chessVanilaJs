@@ -5,7 +5,11 @@ let boardBound,
   clickedSquare,
   boardStatus,
   pieceObj,
-  turnBlack = false;
+  turnBlack = false,
+  king = {
+    w: { x: null, y: null },
+    b: { x: null, y: null },
+  };
 const chessBoard = document.getElementById("chessBoard");
 
 window.addEventListener("load", () => {
@@ -19,37 +23,62 @@ window.addEventListener("resize", () => {
   calcAllMoves();
 });
 
-function simulateMove(){
-
+function simulateMove(from, move, col) {
+  const simBoard = JSON.parse(JSON.stringify(boardStatus));
+  updateBoard(from, move, simBoard);
+  calcAllMoves(simBoard);
+  if (
+    simBoard[king[col].x][king[col].y].targeted &&
+    simBoard[king[col].x][king[col].y].targeted !== col
+  ) {
+    return false;
+  } else {
+    return true;
+  }
 }
 
 function setPieceType(name, obj) {
   switch (name) {
-    case "wp":case "bp":obj = new Pawn(obj);break;
-    case "wr":case "br":obj = new Rook(obj);break;
-    case "wn":case "bn":obj = new Knight(obj);break;
-    case "wb":case "bb":obj = new Bishop(obj);break;
-    case "wq":case "bq":obj = new Queen(obj);break;
-    case "wk":case "bk":obj = new King(obj);break;
-    default:obj = new Piece(obj);
+    case "wp":
+    case "bp":
+      obj = new Pawn(obj);
+      break;
+    case "wr":
+    case "br":
+      obj = new Rook(obj);
+      break;
+    case "wn":
+    case "bn":
+      obj = new Knight(obj);
+      break;
+    case "wb":
+    case "bb":
+      obj = new Bishop(obj);
+      break;
+    case "wq":
+    case "bq":
+      obj = new Queen(obj);
+      break;
+    case "wk":
+    case "bk":
+      obj = new King(obj);
+      break;
+    default:
+      obj = new Piece(obj);
   }
   return obj;
 }
 
-function updateBoard(piece){
-const fromX = parseInt(piece.dataset.x);
-const fromY = parseInt(piece.dataset.y);
-const toX = clickedSquare.x;
-const toY = clickedSquare.y;
-
-boardStatus[toX][toY] = { ...boardStatus[fromX][fromY] };
-boardStatus[fromX][fromY] = { empty: true };
-
-
-piece.dataset.x = toX;
-piece.dataset.y = toY;
-piece.style.gridColumnStart = toX + 1;
-piece.style.gridRowStart = toY + 1;
+function updateBoard(from, move, board = boardStatus) {
+  const fromX = parseInt(from.x);
+  const fromY = parseInt(from.y);
+  const toX = move.x;
+  const toY = move.y;
+  if (!board[toX][toY].empty) {
+    board[toX][toY] = { empty: true };
+  }
+  board[toX][toY] = { ...boardStatus[fromX][fromY] };
+  board[fromX][fromY] = { empty: true };
 }
 
 function setBoardStat() {
@@ -69,39 +98,46 @@ function setBoardStat() {
   });
 }
 
-function setTarget(i, j, col){
-  const currentTarget = boardStatus[i][j].targeted;
+function setTarget(i, j, col, board = boardStatus) {
+  const currentTarget = board[i][j].targeted;
   if (typeof currentTarget === "undefined") {
-    boardStatus[i][j].targeted = col;
+    board[i][j].targeted = col;
   } else if (currentTarget !== col && currentTarget !== "wb") {
-    boardStatus[i][j].targeted = "wb";
+    board[i][j].targeted = "wb";
   }
 }
 
-function calcAllMoves() {
-
-  for(x=0;x<8;x++){
-    for(y=0;y<8;y++){
-      // delete boardStatus[x][y].targeted;
-      if(!boardStatus[x][y].empty){    
-        let name = boardStatus[x][y].name;
+function calcAllMoves(board = boardStatus) {
+  for (let x = 0; x < 8; x++) {
+    for (let y = 0; y < 8; y++) {
+      board[x][y].targeted = undefined;
+    }
+  }
+  for (let x = 0; x < 8; x++) {
+    for (let y = 0; y < 8; y++) {
+      if (!board[x][y].empty) {
+        let name = board[x][y].name;
         let color = name[0];
         pieceObj = new Piece(x, y, color);
         pieceObj = setPieceType(name, pieceObj);
         pieceObj.findMoves();
         // to fix target
-        if(name[1] == "p"){
-          let j = y + pieceObj.step; 
-          if(j< 8 && j >= 0){
-            if(x + 1 < 8){setTarget(x+1, j, color)}
-            if(x - 1 >= 0){setTarget(x-1, j, color)}
+        if (name[1] == "p") {
+          let j = y + pieceObj.step;
+          if (j < 8 && j >= 0) {
+            if (x + 1 < 8) {
+              setTarget(x + 1, j, color, board);
+            }
+            if (x - 1 >= 0) {
+              setTarget(x - 1, j, color, board);
+            }
           }
+        } else {
+          pieceObj.moves.forEach(([i, j]) => {
+            setTarget(i, j, color, board);
+          });
         }
-        else{
-        pieceObj.moves.forEach(([i, j]) => {
-            setTarget(i, j, color);
-        });}
-        boardStatus[x][y].moves = pieceObj.moves;
+        board[x][y].moves = pieceObj.moves;
       }
     }
   }
@@ -150,7 +186,17 @@ class Piece {
 
   movePiece(id) {
     const piece = document.getElementById(id);
-    updateBoard(piece);
+    const move = { x: clickedSquare.x, y: clickedSquare.y };
+    if (!boardStatus[move.x][move.y].empty) {
+      document.getElementById(
+        boardStatus[clickedSquare.x][clickedSquare.y].id
+      ).className = "captured";
+    }
+    updateBoard(piece.dataset, move);
+    piece.dataset.x = move.x;
+    piece.dataset.y = move.y;
+    piece.style.gridColumnStart = move.x + 1;
+    piece.style.gridRowStart = move.y + 1;
     calcAllMoves();
     activePiece = null;
     turnBlack = !turnBlack;
@@ -161,7 +207,7 @@ class Pawn extends Piece {
   step;
   constructor(pieceObj) {
     super(pieceObj.pos.x, pieceObj.pos.y, pieceObj.color);
-    
+
     // Set step based on color
     this.step = this.color === "b" ? 1 : -1;
   }
@@ -186,10 +232,7 @@ class Pawn extends Piece {
       this.moves.push([this.pos.x, this.pos.y + this.step]);
 
       // Move forward two steps from start position
-      if (
-        start &&
-        boardStatus[this.pos.x][this.pos.y + 2 * this.step].empty
-      ) {
+      if (start && boardStatus[this.pos.x][this.pos.y + 2 * this.step].empty) {
         this.moves.push([this.pos.x, this.pos.y + 2 * this.step]);
       }
     }
@@ -305,6 +348,8 @@ class Queen extends Piece {
 class King extends Piece {
   constructor(pieceObj) {
     super(pieceObj.pos.x, pieceObj.pos.y, pieceObj.color);
+    king[this.color].x = this.pos.x;
+    king[this.color].y = this.pos.y;
   }
   findMoves() {
     this.moves = [];
@@ -325,7 +370,8 @@ class King extends Piece {
       if (i >= 0 && i < 8 && j >= 0 && j < 8) {
         if (
           (boardStatus[i][j].empty || boardStatus[i][j].color !== this.color) &&
-          (boardStatus[i][j].targeted === this.color || !(boardStatus[i][j].targeted))
+          (boardStatus[i][j].targeted === this.color ||
+            !boardStatus[i][j].targeted)
         ) {
           this.moves.push([i, j]);
         }
@@ -352,7 +398,7 @@ function showMoves() {
   console.log("Possible Moves:", JSON.stringify(activePiece.moves));
 }
 
-function tryMove() {  
+function tryMove() {
   if (
     activePiece.moves.some(
       (move) => move[0] === clickedSquare.x && move[1] === clickedSquare.y
@@ -364,16 +410,17 @@ function tryMove() {
       activePiece.color
     );
     pieceObj = setPieceType(activePiece.name, pieceObj);
-    if((turnBlack && pieceObj.color == "b")|| (!turnBlack && pieceObj.color == "w")){
-        if(!boardStatus[clickedSquare.x][clickedSquare.y].empty){
-            document.getElementById(boardStatus[clickedSquare.x][clickedSquare.y].id).className = "captured";
-            boardStatus[clickedSquare.x][clickedSquare.y] = { empty : true};
-        }
+    if (
+      (turnBlack && pieceObj.color == "b") ||
+      (!turnBlack && pieceObj.color == "w")
+    ) {
+      {
         pieceObj.movePiece(activePiece.id);
+      }
     }
-  }else if(!(boardStatus[clickedSquare.x][clickedSquare.y].empty)){
+  } else if (!boardStatus[clickedSquare.x][clickedSquare.y].empty) {
     statusCheck();
-  }else{
+  } else {
     activePiece = null;
   }
 }
@@ -381,7 +428,10 @@ function tryMove() {
 chessBoard.addEventListener("click", (event) => {
   clickLocate(event);
   console.log(clickedSquare.x, clickedSquare.y);
-  console.log("Targeted by :", boardStatus[clickedSquare.x][clickedSquare.y].targeted);
+  console.log(
+    "Targeted by :",
+    boardStatus[clickedSquare.x][clickedSquare.y].targeted
+  );
   if (activePiece) {
     tryMove();
   } else {
