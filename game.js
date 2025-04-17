@@ -19,6 +19,10 @@ window.addEventListener("resize", () => {
   calcAllMoves();
 });
 
+function simulateMove(){
+
+}
+
 function setPieceType(name, obj) {
   switch (name) {
     case "wp":case "bp":obj = new Pawn(obj);break;
@@ -30,6 +34,22 @@ function setPieceType(name, obj) {
     default:obj = new Piece(obj);
   }
   return obj;
+}
+
+function updateBoard(piece){
+const fromX = parseInt(piece.dataset.x);
+const fromY = parseInt(piece.dataset.y);
+const toX = clickedSquare.x;
+const toY = clickedSquare.y;
+
+boardStatus[toX][toY] = { ...boardStatus[fromX][fromY] };
+boardStatus[fromX][fromY] = { empty: true };
+
+
+piece.dataset.x = toX;
+piece.dataset.y = toY;
+piece.style.gridColumnStart = toX + 1;
+piece.style.gridRowStart = toY + 1;
 }
 
 function setBoardStat() {
@@ -98,6 +118,7 @@ function clickLocate(event) {
   };
 }
 
+// Pieces
 class Piece {
   pos = { x: null, y: null };
   color;
@@ -129,9 +150,7 @@ class Piece {
 
   movePiece(id) {
     const piece = document.getElementById(id);
-    piece.dataset.x = clickedSquare.x;
-    piece.dataset.y = clickedSquare.y;
-    setBoardStat();
+    updateBoard(piece);
     calcAllMoves();
     activePiece = null;
     turnBlack = !turnBlack;
@@ -333,7 +352,7 @@ function showMoves() {
   console.log("Possible Moves:", JSON.stringify(activePiece.moves));
 }
 
-function moveCheck() {
+function tryMove() {  
   if (
     activePiece.moves.some(
       (move) => move[0] === clickedSquare.x && move[1] === clickedSquare.y
@@ -348,6 +367,7 @@ function moveCheck() {
     if((turnBlack && pieceObj.color == "b")|| (!turnBlack && pieceObj.color == "w")){
         if(!boardStatus[clickedSquare.x][clickedSquare.y].empty){
             document.getElementById(boardStatus[clickedSquare.x][clickedSquare.y].id).className = "captured";
+            boardStatus[clickedSquare.x][clickedSquare.y] = { empty : true};
         }
         pieceObj.movePiece(activePiece.id);
     }
@@ -363,7 +383,7 @@ chessBoard.addEventListener("click", (event) => {
   console.log(clickedSquare.x, clickedSquare.y);
   console.log("Targeted by :", boardStatus[clickedSquare.x][clickedSquare.y].targeted);
   if (activePiece) {
-    moveCheck();
+    tryMove();
   } else {
     statusCheck();
   }
